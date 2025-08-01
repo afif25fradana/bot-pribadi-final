@@ -1,4 +1,4 @@
-# main.py (Versi Final dengan Webhook Diperbaiki)
+# main.py (Versi Final dengan Webhook & Indentasi Diperbaiki)
 import os
 import json
 import pandas as pd
@@ -16,8 +16,10 @@ TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 GSPREAD_CREDENTIALS_JSON = os.environ.get('GSPREAD_CREDENTIALS')
 SPREADSHEET_NAME = os.environ.get('SPREADSHEET_NAME', 'Catatan Keuangan')
 try:
+    # Baris ini sekarang di-indent dengan benar
     ALLOWED_USER_ID = int(os.environ.get('ALLOWED_USER_ID'))
 except (TypeError, ValueError):
+    # Baris ini juga di-indent dengan benar
     ALLOWED_USER_ID = None
 
 app = Flask(__name__)
@@ -149,15 +151,11 @@ async def compare_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 def webhook() -> str:
     """Menangani update dari Telegram dengan lifecycle yang benar."""
     async def process():
-        # Dapatkan data JSON dari request
         update = Update.de_json(request.get_json(force=True), application.bot)
-        
-        # Inisialisasi, proses, dan matikan aplikasi untuk setiap request
         await application.initialize()
         await application.process_update(update)
         await application.shutdown()
 
-    # Jalankan proses async dari dalam fungsi sync
     asyncio.run(process())
     return "OK"
 

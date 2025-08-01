@@ -1,4 +1,4 @@
-# main.py (Versi Final - Laporan Saldo Awal + Analisis)
+# main.py
 import os
 import json
 import pandas as pd
@@ -28,7 +28,8 @@ application = Application.builder().token(TELEGRAM_TOKEN).build()
 def restricted(func):
     @wraps(func)
     async def wrapped(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        if update.effective_user.id != ALLOWED_USER_ID: return
+        if update.effective_user.id != ALLOWED_USER_ID:
+            return
         return await func(update, context, *args, **kwargs)
     return wrapped
 
@@ -40,7 +41,8 @@ def parse_message(text):
     parts = text.split()
     try:
         jumlah = abs(int(parts[1]))
-    except (ValueError, IndexError): return None, None, None
+    except (ValueError, IndexError):
+        return None, None, None
     kategori = "uncategorized"
     deskripsi_parts = []
     for part in parts[2:]:
@@ -54,12 +56,19 @@ def parse_message(text):
 # --- 4. DEFINISI FUNGSI-FUNGSI BOT ---
 @restricted
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_name = update.effective_user.first_name
     pesan = (
-        "Bot Keuangan v5.2 (Lengkap) Siap!\n\n"
-        "Fitur Utama:\n"
-        "✅ `/masuk` & `/keluar`\n"
-        "📊 `/laporan` - Laporan arus kas bulan ini (dengan saldo awal)\n"
-        "📈 `/compare` - Bandingkan pengeluaran dengan bulan lalu"
+        f"Halo {user_name}! 👋 Bot Keuangan Pribadi Kamu Siap!\n\n"
+        "Berikut adalah daftar perintah yang bisa kamu gunakan:\n\n"
+        "✍️ *Pencatatan*:\n"
+        "`/masuk [jumlah] #[kat] [ket]`\n"
+        "`/keluar [jumlah] #[kat] [ket]`\n\n"
+        "📊 *Laporan Arus Kas*:\n"
+        "`/laporan`\n"
+        "   (Laporan bulan ini dengan saldo awal)\n\n"
+        "📈 *Analisis Perbandingan*:\n"
+        "`/compare`\n"
+        "   (Bandingkan pengeluaran bulan ini & lalu)"
     )
     await update.message.reply_text(pesan, parse_mode='Markdown')
 
@@ -68,6 +77,7 @@ async def catat_transaksi(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     try:
         command = update.message.text.split()[0].lower()
         tipe = "Pemasukan" if command == "/masuk" else "Pengeluaran"
+        emoji = "🟢" if tipe == "Pemasukan" else "🔴"
         jumlah, kategori, deskripsi = parse_message(update.message.text)
         if jumlah is None:
             await update.message.reply_text("Format salah. Contoh: `/keluar 50000 #makanan`")
@@ -78,14 +88,13 @@ async def catat_transaksi(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         spreadsheet = client.open(SPREADSHEET_NAME)
         target_sheet = spreadsheet.worksheet("Transaksi")
         target_sheet.append_row(new_row)
-        await update.message.reply_text(f"✅ Dicatat: {tipe} {jumlah} untuk kategori #{kategori}")
+        await update.message.reply_text(f"{emoji} Dicatat: *{tipe}* `Rp {jumlah:,.0f}` untuk kategori `#{kategori}`.", parse_mode='Markdown')
     except Exception:
         traceback.print_exc()
         await update.message.reply_text("Waduh, ada error saat mencatat.")
 
 @restricted
 async def laporan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Membuat laporan arus kas lengkap dengan saldo awal."""
     try:
         await update.message.reply_text("⏳ Sedang menyusun laporan arus kas...")
         
@@ -106,20 +115,17 @@ async def laporan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         df['Tanggal'] = pd.to_datetime(df['Tanggal'], errors='coerce')
         df.dropna(subset=['Tanggal'], inplace=True)
 
-        # Hitung Saldo Awal
         tanggal_awal_bulan_ini = datetime.date(tahun_target, bulan_target, 1)
         df_sebelumnya = df[df['Tanggal'].dt.date < tanggal_awal_bulan_ini]
         pemasukan_sebelumnya = df_sebelumnya[df_sebelumnya['Tipe'] == 'Pemasukan']['Jumlah'].sum()
         pengeluaran_sebelumnya = df_sebelumnya[df_sebelumnya['Tipe'] == 'Pengeluaran']['Jumlah'].sum()
         saldo_awal = pemasukan_sebelumnya - pengeluaran_sebelumnya
 
-        # Transaksi Bulan Ini
         df_bulan_ini = df[(df['Tanggal'].dt.month == bulan_target) & (df['Tanggal'].dt.year == tahun_target)]
         pemasukan_bulan_ini = df_bulan_ini[df_bulan_ini['Tipe'] == 'Pemasukan']['Jumlah'].sum()
         pengeluaran_bulan_ini = df_bulan_ini[df_bulan_ini['Tipe'] == 'Pengeluaran']['Jumlah'].sum()
         saldo_akhir = saldo_awal + pemasukan_bulan_ini - pengeluaran_bulan_ini
 
-        # Rincian Pengeluaran Bulan Ini
         pengeluaran_per_kategori = df_bulan_ini[df_bulan_ini['Tipe'] == 'Pengeluaran'].groupby('Kategori')['Jumlah'].sum().sort_values(ascending=False)
         rincian_teks = ""
         if not pengeluaran_per_kategori.empty:
@@ -180,7 +186,7 @@ async def compare_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         for kategori, row in df_compare.iterrows():
             total_ini, total_lalu = row['Bulan Ini'], row['Bulan Lalu']
             selisih = total_ini - total_lalu
-            emoji = "🔺" if selisih > 0 else ("🔻" if selisih < 0 else "")
+            emoji = "🔺" if selisih > 0 else ("🔻" if selisih < 0 else "➖")
             rincian_teks += f"`#{kategori:<12} Rp{int(total_ini):<8,} vs Rp{int(total_lalu):<8,}` {emoji}\n"
         
         nama_bulan_ini = datetime.date(1900, bulan_ini, 1).strftime('%B')
@@ -219,4 +225,3 @@ application.add_handler(CommandHandler("masuk", catat_transaksi))
 application.add_handler(CommandHandler("keluar", catat_transaksi))
 application.add_handler(CommandHandler("laporan", laporan))
 application.add_handler(CommandHandler("compare", compare_report))
-

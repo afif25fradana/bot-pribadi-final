@@ -58,8 +58,8 @@ def parse_message(text):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_name = update.effective_user.first_name
     pesan = (
-        f"Halo {user_name}! 👋 Bot Keuangan Pribadi Kamu Siap!\n\n"
-        "Berikut adalah daftar perintah yang bisa kamu gunakan:\n\n"
+        f"Halo {user_name}~! 👋 Mau nyatet apa hari ini?\n\n"
+        "Ini perintah yang bisa kamu pakai:\n\n"
         "✍️ *Pencatatan*:\n"
         "`/masuk [jumlah] #[kat] [ket]`\n"
         "`/keluar [jumlah] #[kat] [ket]`\n\n"

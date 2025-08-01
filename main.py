@@ -1,4 +1,4 @@
-# main.py (Final - Webhook FIX)
+# main.py (Versi Final dengan Indentasi Diperbaiki)
 import os
 import json
 import pandas as pd
@@ -9,15 +9,17 @@ from flask import Flask, request
 import gspread
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
-import asyncio # <-- TAMBAHKAN IMPORT INI
+import asyncio
 
 # --- KONFIGURASI ---
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 GSPREAD_CREDENTIALS_JSON = os.environ.get('GSPREAD_CREDENTIALS')
 SPREADSHEET_NAME = os.environ.get('SPREADSHEET_NAME', 'Catatan Keuangan')
 try:
+    # Baris ini sekarang di-indent dengan benar
     ALLOWED_USER_ID = int(os.environ.get('ALLOWED_USER_ID'))
 except (TypeError, ValueError):
+    # Baris ini juga di-indent dengan benar
     ALLOWED_USER_ID = None
 
 app = Flask(__name__)
@@ -27,7 +29,8 @@ application = Application.builder().token(TELEGRAM_TOKEN).build()
 def restricted(func):
     @wraps(func)
     async def wrapped(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        if update.effective_user.id != ALLOWED_USER_ID: return
+        if update.effective_user.id != ALLOWED_USER_ID:
+            return
         return await func(update, context, *args, **kwargs)
     return wrapped
 
@@ -39,7 +42,8 @@ def parse_message(text):
     parts = text.split()
     try:
         jumlah = abs(int(parts[1]))
-    except (ValueError, IndexError): return None, None, None
+    except (ValueError, IndexError):
+        return None, None, None
     kategori = "uncategorized"
     deskripsi_parts = []
     for part in parts[2:]:
@@ -142,7 +146,7 @@ async def compare_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         traceback.print_exc()
         await update.message.reply_text("Waduh, ada error saat membuat perbandingan.")
 
-# --- BAGIAN WEBHOOK (DENGAN PERBAIKAN) ---
+# --- BAGIAN WEBHOOK ---
 @app.route('/webhook', methods=['POST'])
 def webhook():
     json_data = request.get_json(force=True)
@@ -157,10 +161,8 @@ def index():
     return 'Bot Keuangan Pribadi is running!'
 
 # --- MAIN PROGRAM ---
-# Tambahkan semua command handler ke aplikasi
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("masuk", catat_transaksi))
 application.add_handler(CommandHandler("keluar", catat_transaksi))
 application.add_handler(CommandHandler("laporan", laporan))
 application.add_handler(CommandHandler("compare", compare_report))
-

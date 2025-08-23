@@ -1,43 +1,63 @@
-# main.py
 import os
 import json
 import pandas as pd
 import datetime
 import traceback
 from functools import wraps
-from flask import Flask, request
+from flask import Flask, request, Response
 import gspread
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 import asyncio
+from typing import Union, Tuple, cast
 
 # --- 1. KONFIGURASI ---
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 GSPREAD_CREDENTIALS_JSON = os.environ.get('GSPREAD_CREDENTIALS')
 SPREADSHEET_NAME = os.environ.get('SPREADSHEET_NAME', 'Catatan Keuangan')
-try:
-    ALLOWED_USER_ID = int(os.environ.get('ALLOWED_USER_ID'))
-except (TypeError, ValueError):
-    ALLOWED_USER_ID = None
+
+_allowed_user_id_str = os.environ.get('ALLOWED_USER_ID')
+ALLOWED_USER_ID: int | None = None
+if isinstance(_allowed_user_id_str, str):
+    try:
+        ALLOWED_USER_ID = int(cast(str, _allowed_user_id_str))
+    except ValueError:
+        ALLOWED_USER_ID = None
 
 # --- 2. INISIALISASI APLIKASI ---
 app = Flask(__name__)
-application = Application.builder().token(TELEGRAM_TOKEN).build()
+if TELEGRAM_TOKEN is None:
+    raise ValueError("TELEGRAM_TOKEN environment variable is not set.")
+telegram_token_str: str = cast(str, TELEGRAM_TOKEN)
+application = Application.builder().token(telegram_token_str).build()
+loop = asyncio.get_event_loop()
+loop.run_until_complete(application.start())
 
 # --- 3. FUNGSI BANTUAN & DECORATOR ---
 def restricted(func):
     @wraps(func)
     async def wrapped(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        if update.effective_user.id != ALLOWED_USER_ID:
+        if update.effective_user is None:
+            return
+        if update.message is None:
+            return
+
+        if ALLOWED_USER_ID is None or update.effective_user.id != ALLOWED_USER_ID:
+            await update.message.reply_text("Maaf, Anda tidak diizinkan menggunakan bot ini.")
             return
         return await func(update, context, *args, **kwargs)
     return wrapped
 
 def get_client():
+    if GSPREAD_CREDENTIALS_JSON is None:
+        raise ValueError("GSPREAD_CREDENTIALS environment variable is not set.")
     creds_dict = json.loads(GSPREAD_CREDENTIALS_JSON)
     return gspread.service_account_from_dict(creds_dict)
 
-def parse_message(text):
+def parse_message(text: str | None):
+    if text is None:
+        return None, None, None
+    assert text is not None
     parts = text.split()
     try:
         jumlah = abs(int(parts[1]))
@@ -56,6 +76,8 @@ def parse_message(text):
 # --- 4. DEFINISI FUNGSI-FUNGSI BOT ---
 @restricted
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.effective_user is not None
+    assert update.message is not None
     user_name = update.effective_user.first_name
     pesan = (
         f"Halo {user_name}~! 👋 Mau nyatet apa hari ini?\n\n"
@@ -74,6 +96,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 @restricted
 async def catat_transaksi(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.message is not None
+    assert update.message.text is not None
     try:
         command = update.message.text.split()[0].lower()
         tipe = "Pemasukan" if command == "/masuk" else "Pengeluaran"
@@ -95,6 +119,7 @@ async def catat_transaksi(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 @restricted
 async def laporan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.message is not None
     try:
         await update.message.reply_text("⏳ Sedang menyusun laporan arus kas...")
         
@@ -111,7 +136,8 @@ async def laporan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             return
 
         df = pd.DataFrame(data)
-        df['Jumlah'] = pd.to_numeric(df['Jumlah'], errors='coerce').fillna(0)
+        df['Jumlah'] = pd.to_numeric(df['Jumlah'], errors='coerce')
+        df['Jumlah'] = df['Jumlah'].fillna(0)
         df['Tanggal'] = pd.to_datetime(df['Tanggal'], errors='coerce')
         df.dropna(subset=['Tanggal'], inplace=True)
 
@@ -150,6 +176,7 @@ async def laporan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 @restricted
 async def compare_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.message is not None
     try:
         await update.message.reply_text("⏳ Sedang menyusun analisis perbandingan...")
         client = get_client()
@@ -161,7 +188,8 @@ async def compare_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             return
 
         df = pd.DataFrame(data)
-        df['Jumlah'] = pd.to_numeric(df['Jumlah'], errors='coerce').fillna(0)
+        df['Jumlah'] = pd.to_numeric(df['Jumlah'], errors='coerce')
+        df['Jumlah'] = df['Jumlah'].fillna(0)
         df['Tanggal'] = pd.to_datetime(df['Tanggal'], errors='coerce')
         df.dropna(subset=['Tanggal'], inplace=True)
 
@@ -180,14 +208,18 @@ async def compare_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         kat_ini = df_bulan_ini[df_bulan_ini['Tipe'] == 'Pengeluaran'].groupby('Kategori')['Jumlah'].sum().rename('Bulan Ini')
         kat_lalu = df_bulan_lalu[df_bulan_lalu['Tipe'] == 'Pengeluaran'].groupby('Kategori')['Jumlah'].sum().rename('Bulan Lalu')
         
-        df_compare = pd.concat([kat_ini, kat_lalu], axis=1).fillna(0).sort_values(by='Bulan Ini', ascending=False)
+        df_compare = pd.concat([kat_ini, kat_lalu], axis=1).fillna(0)
+        df_compare['Bulan Ini'] = df_compare['Bulan Ini'].astype(int)
+        df_compare['Bulan Lalu'] = df_compare['Bulan Lalu'].astype(int)
+        df_compare = df_compare.sort_values(by='Bulan Ini', ascending=False)
         
         rincian_teks = "\n\n*Perbandingan per Kategori:*\n`Kategori      Bulan Ini vs Bulan Lalu`\n"
         for kategori, row in df_compare.iterrows():
-            total_ini, total_lalu = row['Bulan Ini'], row['Bulan Lalu']
+            total_ini = int(row['Bulan Ini'])
+            total_lalu = int(row['Bulan Lalu'])
             selisih = total_ini - total_lalu
             emoji = "🔺" if selisih > 0 else ("🔻" if selisih < 0 else "➖")
-            rincian_teks += f"`#{kategori:<12} Rp{int(total_ini):<8,} vs Rp{int(total_lalu):<8,}` {emoji}\n"
+            rincian_teks += f"`#{kategori:<12} Rp{total_ini:<8,} vs Rp{total_lalu:<8,}` {emoji}\n"
         
         nama_bulan_ini = datetime.date(1900, bulan_ini, 1).strftime('%B')
         nama_bulan_lalu = datetime.date(1900, bulan_lalu, 1).strftime('%B')
@@ -205,15 +237,14 @@ async def compare_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 # --- 5. BAGIAN WEBHOOK ---
 @app.route('/webhook', methods=['POST'])
-def webhook() -> str:
-    async def process():
+async def webhook() -> Union[str, Response, Tuple[str, int]]:
+    try:
         update = Update.de_json(request.get_json(force=True), application.bot)
-        await application.initialize()
         await application.process_update(update)
-        await application.shutdown()
-
-    asyncio.run(process())
-    return "OK"
+        return "OK"
+    except Exception:
+        traceback.print_exc()
+        return "Error", 500
 
 @app.route('/')
 def index():
@@ -225,3 +256,10 @@ application.add_handler(CommandHandler("masuk", catat_transaksi))
 application.add_handler(CommandHandler("keluar", catat_transaksi))
 application.add_handler(CommandHandler("laporan", laporan))
 application.add_handler(CommandHandler("compare", compare_report))
+
+# --- 7. SHUTDOWN HOOK ---
+@app.teardown_appcontext
+def shutdown_telegram_app(exception=None):
+    global application
+    if application.running:
+        loop.run_until_complete(application.stop())

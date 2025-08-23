@@ -2,5 +2,5 @@ python-telegram-bot
 gspread
 oauth2client
 pandas
-Flask
+Flask[async]
 gunicorn

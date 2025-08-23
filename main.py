@@ -1,65 +1,44 @@
+# main.py
 import os
 import json
 import pandas as pd
 import datetime
 import traceback
 from functools import wraps
-from flask import Flask, request, Response
+from flask import Flask, request
 import gspread
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 import asyncio
-from typing import Union, Tuple, cast
 
 # --- 1. KONFIGURASI ---
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 GSPREAD_CREDENTIALS_JSON = os.environ.get('GSPREAD_CREDENTIALS')
 SPREADSHEET_NAME = os.environ.get('SPREADSHEET_NAME', 'Catatan Keuangan')
-
-_allowed_user_id_str = os.environ.get('ALLOWED_USER_ID')
-ALLOWED_USER_ID: int | None = None # Initialize with explicit type hint
-if isinstance(_allowed_user_id_str, str): # Use isinstance for clearer type narrowing
-    try:
-        ALLOWED_USER_ID = int(cast(str, _allowed_user_id_str)) # type: ignore[arg-type] # Use cast for explicit type assertion
-    except ValueError: # TypeError is not expected if it's already a string
-        ALLOWED_USER_ID = None
+try:
+    ALLOWED_USER_ID = int(os.environ.get('ALLOWED_USER_ID'))
+except (TypeError, ValueError):
+    ALLOWED_USER_ID = None
 
 # --- 2. INISIALISASI APLIKASI ---
 app = Flask(__name__)
-if TELEGRAM_TOKEN is None:
-    raise ValueError("TELEGRAM_TOKEN environment variable is not set.")
-telegram_token_str: str = cast(str, TELEGRAM_TOKEN) # type: ignore[assignment] # Use cast for explicit type assertion
-application = Application.builder().token(telegram_token_str).build()
-# The Application should not be explicitly started/stopped here when Flask is handling webhooks.
-# Its process_update method will be called directly by the webhook route.
+application = Application.builder().token(TELEGRAM_TOKEN).build()
 
 # --- 3. FUNGSI BANTUAN & DECORATOR ---
 def restricted(func):
     @wraps(func)
     async def wrapped(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        if update.effective_user is None:
-            return # Cannot proceed without effective_user
-        if update.message is None:
-            return # Cannot proceed without message
-
-        # Now update.effective_user and update.message are guaranteed not to be None
-        if ALLOWED_USER_ID is None or update.effective_user.id != ALLOWED_USER_ID: # type: ignore[union-attr]
-            await update.message.reply_text("Maaf, Anda tidak diizinkan menggunakan bot ini.") # type: ignore[union-attr]
+        if update.effective_user.id != ALLOWED_USER_ID:
             return
         return await func(update, context, *args, **kwargs)
     return wrapped
 
 def get_client():
-    if GSPREAD_CREDENTIALS_JSON is None:
-        raise ValueError("GSPREAD_CREDENTIALS environment variable is not set.")
-    creds_dict = json.loads(GSPREAD_CREDENTIALS_JSON) # Pylance should now infer GSPREAD_CREDENTIALS_JSON as str
+    creds_dict = json.loads(GSPREAD_CREDENTIALS_JSON)
     return gspread.service_account_from_dict(creds_dict)
 
-def parse_message(text: str | None):
-    if text is None:
-        return None, None, None
-    assert text is not None # Ensure text is not None for split()
-    parts = text.split() # type: ignore[union-attr]
+def parse_message(text):
+    parts = text.split()
     try:
         jumlah = abs(int(parts[1]))
     except (ValueError, IndexError):
@@ -77,9 +56,7 @@ def parse_message(text: str | None):
 # --- 4. DEFINISI FUNGSI-FUNGSI BOT ---
 @restricted
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    assert update.effective_user is not None
-    assert update.message is not None
-    user_name = update.effective_user.first_name # type: ignore[union-attr]
+    user_name = update.effective_user.first_name
     pesan = (
         f"Halo {user_name}~! 👋 Mau nyatet apa hari ini?\n\n"
         "Ini perintah yang bisa kamu pakai:\n\n"
@@ -93,19 +70,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "`/compare`\n"
         "   (Bandingkan pengeluaran bulan ini & lalu)"
     )
-    await update.message.reply_text(pesan, parse_mode='Markdown') # type: ignore[union-attr]
+    await update.message.reply_text(pesan, parse_mode='Markdown')
 
 @restricted
 async def catat_transaksi(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    assert update.message is not None
-    assert update.message.text is not None
     try:
-        command = update.message.text.split()[0].lower() # type: ignore[union-attr]
+        command = update.message.text.split()[0].lower()
         tipe = "Pemasukan" if command == "/masuk" else "Pengeluaran"
         emoji = "🟢" if tipe == "Pemasukan" else "🔴"
         jumlah, kategori, deskripsi = parse_message(update.message.text)
         if jumlah is None:
-            await update.message.reply_text("Format salah. Contoh: `/keluar 50000 #makanan`") # type: ignore[union-attr]
+            await update.message.reply_text("Format salah. Contoh: `/keluar 50000 #makanan`")
             return
         tanggal = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         new_row = [tanggal, tipe, jumlah, kategori, deskripsi]
@@ -113,16 +88,15 @@ async def catat_transaksi(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         spreadsheet = client.open(SPREADSHEET_NAME)
         target_sheet = spreadsheet.worksheet("Transaksi")
         target_sheet.append_row(new_row)
-        await update.message.reply_text(f"{emoji} Dicatat: *{tipe}* `Rp {jumlah:,.0f}` untuk kategori `#{kategori}`.", parse_mode='Markdown') # type: ignore[union-attr]
+        await update.message.reply_text(f"{emoji} Dicatat: *{tipe}* `Rp {jumlah:,.0f}` untuk kategori `#{kategori}`.", parse_mode='Markdown')
     except Exception:
         traceback.print_exc()
-        await update.message.reply_text("Waduh, ada error saat mencatat.") # type: ignore[union-attr]
+        await update.message.reply_text("Waduh, ada error saat mencatat.")
 
 @restricted
 async def laporan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    assert update.message is not None
     try:
-        await update.message.reply_text("⏳ Sedang menyusun laporan arus kas...") # type: ignore[union-attr]
+        await update.message.reply_text("⏳ Sedang menyusun laporan arus kas...")
         
         sekarang = datetime.datetime.now()
         bulan_target, tahun_target = sekarang.month, sekarang.year
@@ -133,12 +107,11 @@ async def laporan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         data = sheet.get_all_records()
 
         if not data:
-            await update.message.reply_text("Belum ada data transaksi.") # type: ignore[union-attr]
+            await update.message.reply_text("Belum ada data transaksi.")
             return
 
         df = pd.DataFrame(data)
-        df['Jumlah'] = pd.to_numeric(df['Jumlah'], errors='coerce')
-        df['Jumlah'] = df['Jumlah'].fillna(0) # Ensure fillna is called on a Series
+        df['Jumlah'] = pd.to_numeric(df['Jumlah'], errors='coerce').fillna(0)
         df['Tanggal'] = pd.to_datetime(df['Tanggal'], errors='coerce')
         df.dropna(subset=['Tanggal'], inplace=True)
 
@@ -170,27 +143,25 @@ async def laporan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             f"🏦 *SALDO AKHIR:*\n`Rp {saldo_akhir:,.0f}`"
             f"{rincian_teks}"
         )
-        await update.message.reply_text(pesan, parse_mode='Markdown') # type: ignore[union-attr]
+        await update.message.reply_text(pesan, parse_mode='Markdown')
     except Exception:
         traceback.print_exc()
-        await update.message.reply_text("Waduh, ada error saat membuat laporan.") # type: ignore[union-attr]
+        await update.message.reply_text("Waduh, ada error saat membuat laporan.")
 
 @restricted
 async def compare_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    assert update.message is not None
     try:
-        await update.message.reply_text("⏳ Sedang menyusun analisis perbandingan...") # type: ignore[union-attr]
+        await update.message.reply_text("⏳ Sedang menyusun analisis perbandingan...")
         client = get_client()
         spreadsheet = client.open(SPREADSHEET_NAME)
         sheet = spreadsheet.worksheet("Transaksi")
         data = sheet.get_all_records()
         if not data:
-            await update.message.reply_text("Belum ada data untuk dibandingkan.") # type: ignore[union-attr]
+            await update.message.reply_text("Belum ada data untuk dibandingkan.")
             return
 
         df = pd.DataFrame(data)
-        df['Jumlah'] = pd.to_numeric(df['Jumlah'], errors='coerce')
-        df['Jumlah'] = df['Jumlah'].fillna(0) # Ensure fillna is called on a Series
+        df['Jumlah'] = pd.to_numeric(df['Jumlah'], errors='coerce').fillna(0)
         df['Tanggal'] = pd.to_datetime(df['Tanggal'], errors='coerce')
         df.dropna(subset=['Tanggal'], inplace=True)
 
@@ -209,18 +180,14 @@ async def compare_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         kat_ini = df_bulan_ini[df_bulan_ini['Tipe'] == 'Pengeluaran'].groupby('Kategori')['Jumlah'].sum().rename('Bulan Ini')
         kat_lalu = df_bulan_lalu[df_bulan_lalu['Tipe'] == 'Pengeluaran'].groupby('Kategori')['Jumlah'].sum().rename('Bulan Lalu')
         
-        df_compare = pd.concat([kat_ini, kat_lalu], axis=1).fillna(0)
-        df_compare['Bulan Ini'] = df_compare['Bulan Ini'].astype(int)
-        df_compare['Bulan Lalu'] = df_compare['Bulan Lalu'].astype(int)
-        df_compare = df_compare.sort_values(by='Bulan Ini', ascending=False)
+        df_compare = pd.concat([kat_ini, kat_lalu], axis=1).fillna(0).sort_values(by='Bulan Ini', ascending=False)
         
         rincian_teks = "\n\n*Perbandingan per Kategori:*\n`Kategori      Bulan Ini vs Bulan Lalu`\n"
         for kategori, row in df_compare.iterrows():
-            total_ini = int(row['Bulan Ini']) # type: ignore
-            total_lalu = int(row['Bulan Lalu']) # type: ignore
+            total_ini, total_lalu = row['Bulan Ini'], row['Bulan Lalu']
             selisih = total_ini - total_lalu
             emoji = "🔺" if selisih > 0 else ("🔻" if selisih < 0 else "➖")
-            rincian_teks += f"`#{kategori:<12} Rp{total_ini:<8,} vs Rp{total_lalu:<8,}` {emoji}\n"
+            rincian_teks += f"`#{kategori:<12} Rp{int(total_ini):<8,} vs Rp{int(total_lalu):<8,}` {emoji}\n"
         
         nama_bulan_ini = datetime.date(1900, bulan_ini, 1).strftime('%B')
         nama_bulan_lalu = datetime.date(1900, bulan_lalu, 1).strftime('%B')
@@ -231,21 +198,22 @@ async def compare_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             f"*{nama_bulan_lalu}:* `Rp {pengeluaran_bulan_lalu:,.0f}`\n"
             f"{rincian_teks}"
         )
-        await update.message.reply_text(pesan, parse_mode='Markdown') # type: ignore[union-attr]
+        await update.message.reply_text(pesan, parse_mode='Markdown')
     except Exception:
         traceback.print_exc()
-        await update.message.reply_text("Waduh, ada error saat membuat perbandingan.") # type: ignore[union-attr]
+        await update.message.reply_text("Waduh, ada error saat membuat perbandingan.")
 
 # --- 5. BAGIAN WEBHOOK ---
 @app.route('/webhook', methods=['POST'])
-async def webhook() -> Union[str, Response, Tuple[str, int]]:
-    try:
+def webhook() -> str:
+    async def process():
         update = Update.de_json(request.get_json(force=True), application.bot)
+        await application.initialize()
         await application.process_update(update)
-        return "OK"
-    except Exception:
-        traceback.print_exc()
-        return "Error", 500
+        await application.shutdown()
+
+    asyncio.run(process())
+    return "OK"
 
 @app.route('/')
 def index():
@@ -257,6 +225,3 @@ application.add_handler(CommandHandler("masuk", catat_transaksi))
 application.add_handler(CommandHandler("keluar", catat_transaksi))
 application.add_handler(CommandHandler("laporan", laporan))
 application.add_handler(CommandHandler("compare", compare_report))
-
-# --- 7. SHUTDOWN HOOK (Optional, for graceful shutdown) ---
-# Removed as it conflicts with Flask/Gunicorn lifecycle

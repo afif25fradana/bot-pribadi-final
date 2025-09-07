@@ -41,6 +41,8 @@ This bot is powered by:
 *   **`gspread`**: For seamless integration with Google Sheets, where all my transaction data lives.
 *   **`pandas`**: My go-to for crunching numbers and generating those insightful financial reports.
 *   **Flask**: To handle webhooks and keep the bot running smoothly.
+*   **Logging**: Comprehensive error logging to help troubleshoot issues.
+*   **Environment Variables**: Secure configuration management with `.env` support.
 
 ---
 

@@ -1,49 +1,49 @@
-# 🔒 My Personal Security Policy
+# 🔒 Kebijakan Keamanan Pribadi Saya
 
-As the sole developer and maintainer of this hobby project, I've put a lot of thought into making sure your financial data stays safe and private. This document outlines the security features and best practices I've implemented for my Personal Finance Bot.
+Sebagai satu-satunya pengembang dan pemelihara proyek hobi ini, saya telah banyak memikirkan untuk memastikan data keuangan Anda tetap aman dan pribadi. Dokumen ini menguraikan fitur keamanan dan praktik terbaik yang telah saya terapkan untuk Bot Keuangan Pribadi saya.
 
-## 🔑 Key Security Features I've Built In
+## 🔑 Fitur Keamanan Utama yang Telah Saya Bangun
 
-1.  **Private Access Control**:
-    *   This bot is designed for my personal use (and yours, if you choose to deploy it for yourself!). Access is strictly limited to a single, authorized Telegram user ID, which you configure via the `ALLOWED_USER_ID` environment variable.
-    *   Any messages from unauthorized users are ignored, and I've set up logging to catch and warn about such attempts.
+1.  **Kontrol Akses Pribadi**:
+    *   Bot ini dirancang untuk penggunaan pribadi saya (dan Anda, jika Anda memilih untuk menerapkannya sendiri!). Akses sangat terbatas pada satu ID pengguna Telegram yang sah, yang Anda konfigurasikan melalui variabel lingkungan `ALLOWED_USER_ID`.
+    *   Setiap pesan dari pengguna yang tidak sah akan diabaikan, dan saya telah menyiapkan pencatatan untuk menangkap dan memperingatkan tentang upaya tersebut.
 
-2.  **Secure Credential Management**:
-    *   All sensitive information, including the Telegram bot token, Google Sheets credentials, and your user ID, is managed through environment variables. This is a crucial practice to prevent hardcoding sensitive data directly into the source code, which is a major security risk.
-    *   The `.gitignore` file is carefully configured to prevent the `.env` file (where these variables are typically stored locally) from ever being accidentally committed to a public repository.
+2.  **Manajemen Kredensial Aman**:
+    *   Semua informasi sensitif, termasuk token bot Telegram, kredensial Google Sheets, dan ID pengguna Anda, dikelola melalui variabel lingkungan. Ini adalah praktik penting untuk mencegah pengkodean data sensitif secara langsung ke dalam kode sumber, yang merupakan risiko keamanan utama.
+    *   File `.gitignore` dikonfigurasi dengan hati-hati untuk mencegah file `.env` (tempat variabel-variabel ini biasanya disimpan secara lokal) agar tidak pernah secara tidak sengaja di-commit ke repositori publik.
 
-3.  **No Data Storage on the Server**:
-    *   I designed this bot to be stateless. This means it doesn't store any of your financial data on the server where it's hosted.
-    *   All transaction data is securely transmitted to and stored in your private Google Sheet, giving you full control over your data.
+3.  **Tidak Ada Penyimpanan Data di Server**:
+    *   Saya merancang bot ini agar tidak memiliki status (stateless). Ini berarti bot tidak menyimpan data keuangan Anda di server tempat bot di-hosting.
+    *   Semua data transaksi ditransmisikan dengan aman ke dan disimpan di Google Sheet pribadi Anda, memberi Anda kendali penuh atas data Anda.
 
-4.  **Secure Communication**:
-    *   The bot leverages the official Telegram API, which encrypts all communication between your Telegram app and the bot.
-    *   The connection to Google Sheets is also encrypted, ensuring your data is protected during transit.
+4.  **Komunikasi Aman**:
+    *   Bot ini memanfaatkan API Telegram resmi, yang mengenkripsi semua komunikasi antara aplikasi Telegram Anda dan bot.
+    *   Koneksi ke Google Sheets juga dienkripsi, memastikan data Anda terlindungi selama transit.
 
-## 🚀 Best Practices for Your Secure Deployment
+## 🚀 Praktik Terbaik untuk Penerapan Aman Anda
 
-To ensure the security of your bot, please follow these best practices:
+Untuk memastikan keamanan bot Anda, harap ikuti praktik terbaik ini:
 
-1.  **NEVER Share Your Credentials**:
-    *   Seriously, never commit your `.env` file or any files containing your credentials to a public repository like GitHub.
-    *   Always use your hosting provider's recommended method for managing environment variables (e.g., Heroku Config Vars, Vercel Environment Variables).
+1.  **JANGAN PERNAH Bagikan Kredensial Anda**:
+    *   Serius, jangan pernah meng-commit file `.env` Anda atau file apa pun yang berisi kredensial Anda ke repositori publik seperti GitHub.
+    *   Selalu gunakan metode yang direkomendasikan penyedia hosting Anda untuk mengelola variabel lingkungan (misalnya, Heroku Config Vars, Vercel Environment Variables).
 
-2.  **Use a Strong, Unique Bot Token**:
-    *   Treat your Telegram bot token like a password. If it's ever exposed, regenerate it immediately from BotFather on Telegram.
+2.  **Gunakan Token Bot yang Kuat dan Unik**:
+    *   Perlakukan token bot Telegram Anda seperti kata sandi. Jika token tersebut pernah terekspos, segera buat ulang dari BotFather di Telegram.
 
-3.  **Secure Your Google Sheet**:
-    *   Ensure that your Google Sheet is not publicly accessible.
-    *   Only share it with the service account email address you created for the bot.
+3.  **Amankan Google Sheet Anda**:
+    *   Pastikan Google Sheet Anda tidak dapat diakses secara publik.
+    *   Hanya bagikan dengan alamat email akun layanan yang Anda buat untuk bot.
 
-4.  **Monitor Bot Activity**:
-    *   I've included logging to help you monitor the bot's activity. Regularly check the logs for any suspicious behavior or unauthorized access attempts.
+4.  **Pantau Aktivitas Bot**:
+    *   Saya telah menyertakan pencatatan untuk membantu Anda memantau aktivitas bot. Periksa log secara teratur untuk setiap perilaku mencurigakan atau upaya akses tidak sah.
 
-## 🚨 Reporting a Vulnerability
+## 🚨 Melaporkan Kerentanan
 
-If you happen to discover a security vulnerability, please report it responsibly. Do not disclose it publicly. Instead, create a new issue in the GitHub repository with the label "security" to bring it to my attention.
+Jika Anda menemukan kerentanan keamanan, harap laporkan secara bertanggung jawab. Jangan mengungkapkannya secara publik. Sebagai gantinya, buat masalah baru di repositori GitHub dengan label "security" untuk memberitahukannya kepada saya.
 
-I take security seriously, even in a hobby project, and will address any vulnerabilities as quickly as possible.
+Saya menganggap serius keamanan, bahkan dalam proyek hobi, dan akan mengatasi setiap kerentanan secepat mungkin.
 
 ---
 
-By following these guidelines, you can confidently use your Personal Finance Bot to manage your finances securely.
+Dengan mengikuti panduan ini, Anda dapat dengan percaya diri menggunakan Bot Keuangan Pribadi Anda untuk mengelola keuangan Anda dengan aman.

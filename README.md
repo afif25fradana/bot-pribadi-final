@@ -1,85 +1,142 @@
-# 🤖 My Personal Finance Bot 🤖
+# 🤖 Bot Keuangan Pribadi Saya 🤖
 
-👋 Welcome to my personal finance bot! This is a hobby project I've poured my passion into, creating a simple yet powerful Telegram bot to help me (and hopefully you!) manage finances with ease. It's designed to be intuitive, visually appealing, and packed with features to give a clear picture of financial health.
+👋 Selamat datang di bot keuangan pribadi saya! Ini adalah proyek hobi yang saya curahkan dengan penuh semangat, menciptakan bot Telegram yang sederhana namun kuat untuk membantu saya (dan semoga Anda juga!) mengelola keuangan dengan mudah. Bot ini dirancang agar intuitif, menarik secara visual, dan dilengkapi dengan fitur-fitur untuk memberikan gambaran yang jelas tentang kesehatan finansial.
 
-Think of this bot as my personal financial assistant, always ready to help me stay on top of my budget and make informed financial decisions.
-
----
-
-✨ **What's New in v2.0.0?** ✨
-
-*   **🚀 Enhanced User Interface**: A completely redesigned, visually appealing interface with interactive buttons for a seamless user experience.
-*   **📊 Advanced Reporting**: More detailed and insightful reports, including category breakdowns, financial health status, and performance comparisons.
-*   **⚡ Improved Performance**: Optimized code for faster response times and more efficient data processing.
-*   **🛡️ Robust Error Handling**: Better error handling and auto-reconnection to ensure the bot is always available when you need it.
-*   **⚙️ Comprehensive Health Checks**: A new health check script to easily diagnose and troubleshoot any issues.
+Anggap saja bot ini sebagai asisten keuangan pribadi saya, selalu siap membantu saya mengelola anggaran dan membuat keputusan finansial yang tepat.
 
 ---
 
-✨ **Key Features** ✨
+✨ **Apa yang Baru di v2.0.0?** ✨
 
-*   **✍️ Easy Transaction Logging**: Quickly record income and expenses with simple commands.
+*   **🚀 Antarmuka Pengguna yang Ditingkatkan**: Antarmuka yang sepenuhnya didesain ulang, menarik secara visual dengan tombol interaktif untuk pengalaman pengguna yang mulus.
+*   **📊 Pelaporan Lanjutan**: Laporan yang lebih rinci dan mendalam, termasuk rincian kategori, status kesehatan finansial, dan perbandingan kinerja.
+*   **⚡ Kinerja yang Ditingkatkan**: Kode yang dioptimalkan untuk waktu respons yang lebih cepat dan pemrosesan data yang lebih efisien.
+*   **🛡️ Penanganan Kesalahan yang Kuat**: Penanganan kesalahan yang lebih baik dan koneksi ulang otomatis untuk memastikan bot selalu tersedia saat Anda membutuhkannya.
+*   **⚙️ Pemeriksaan Kesehatan Komprehensif**: Skrip pemeriksaan kesehatan baru untuk dengan mudah mendiagnosis dan memecahkan masalah apa pun.
+*   **📁 Struktur Proyek yang Direfaktor**: Kode diorganisir ulang ke dalam struktur modular untuk pemeliharaan yang lebih mudah dan pengembangan yang lebih cepat. File main.py telah dihapus dan fungsinya diintegrasikan ke dalam app.py.
+```
+---
+
+✨ **Fitur Utama** ✨
+
+*   **✍️ Pencatatan Transaksi Mudah**: Catat pemasukan dan pengeluaran dengan cepat menggunakan perintah sederhana.
     *   `/masuk [jumlah] #[kategori] [keterangan]`
     *   `/keluar [jumlah] #[kategori] [keterangan]`
-*   **📊 Monthly Cash Flow Reports**: Get a clear summary of your income, expenses, and current balance for the month.
+*   **📊 Laporan Arus Kas Bulanan**: Dapatkan ringkasan jelas tentang pemasukan, pengeluaran, dan saldo Anda saat ini untuk bulan tersebut.
     *   `/laporan`
-*   **📈 Spending Comparison**: Compare this month's spending against last month's to identify trends and stay on budget.
+*   **📈 Perbandingan Pengeluaran**: Bandingkan pengeluaran bulan ini dengan bulan lalu untuk mengidentifikasi tren dan tetap sesuai anggaran.
     *   `/compare`
-*   **🔒 Private & Secure**: Restricted access to ensure your financial data remains confidential.
-*   **💡 Interactive & User-Friendly**: A rich interface with buttons, tips, and helpful guides to make financial tracking easy and enjoyable.
+*   **🔒 Pribadi & Aman**: Akses terbatas untuk memastikan data keuangan Anda tetap rahasia.
+*   **💡 Interaktif & Ramah Pengguna**: Antarmuka yang kaya dengan tombol, tips, dan panduan bermanfaat untuk membuat pelacakan keuangan menjadi mudah dan menyenangkan.
 
 ---
 
-🚀 **Quick Start Guide** 🚀
+📁 **Struktur Proyek** 📁
 
-1.  **Talk to the Bot**: Open Telegram and start a chat with the bot.
-2.  **Start Chatting**: Send `/start` to get a welcome message and see the available commands.
-3.  **Record Transactions**:
-    *   To add income: `/masuk 1000000 #gaji Bonus`
-    *   To add an expense: `/keluar 50000 #makanan Makan siang`
-4.  **Check Reports**:
-    *   For a monthly summary: `/laporan`
-    *   To compare spending: `/compare`
-
----
-
-🛠️ **Tech Stack** 🛠️
-
-*   **Python**: The core language for the bot's logic.
-*   **`python-telegram-bot`**: For seamless integration with the Telegram API.
-*   **`gspread`**: To connect to Google Sheets for data storage.
-*   **`pandas`**: For powerful data analysis and report generation.
-*   **Flask**: To handle webhooks and keep the bot running smoothly.
-*   **Logging**: Comprehensive error logging for easy troubleshooting.
-*   **Environment Variables**: Secure configuration management with `.env` support.
-
----
-
-⚙️ **Setup Instructions** ⚙️
-
-To set up your own personal finance bot, you'll need:
-
-1.  **Telegram Bot Token**: Get one from BotFather on Telegram.
-2.  **Google Cloud Project & Service Account**:
-    *   Enable the Google Sheets API.
-    *   Create a service account and download its JSON credentials.
-    *   Share your Google Sheet with the service account's email address.
-3.  **Environment Variables**: Set these up in your deployment environment:
-    *   `TELEGRAM_TOKEN`: Your bot's token.
-    *   `GSPREAD_CREDENTIALS`: The content of your service account JSON file.
-    *   `SPREADSHEET_NAME`: The name of your Google Sheet.
-    *   `ALLOWED_USER_ID`: Your Telegram user ID to restrict access.
+```
+.
+├── app/                    # Direktori utama aplikasi
+│   ├── bot/                # Modul bot Telegram
+│   │   ├── __init__.py     # Inisialisasi bot
+│   │   ├── handlers.py     # Handler perintah bot
+│   │   └── utils.py        # Fungsi utilitas bot
+│   ├── database/           # Modul database
+│   │   ├── __init__.py     # Inisialisasi database
+│   │   └── sheets.py       # Interaksi dengan Google Sheets
+│   ├── web/                # Modul web
+│   │   ├── __init__.py     # Inisialisasi web
+│   │   └── routes.py       # Endpoint web dan webhook
+│   ├── __init__.py         # Inisialisasi aplikasi
+│   └── config.py           # Konfigurasi aplikasi
+├── logs/                   # Direktori log
+│   └── .gitkeep            # File untuk memastikan direktori log disertakan dalam Git
+├── tests/                  # Direktori tes
+│   ├── __init__.py         # Inisialisasi tes
+│   └── health_check.py     # Skrip pemeriksaan kesehatan
+├── .env.example            # Contoh file konfigurasi lingkungan
+├── .gitignore              # File yang diabaikan Git
+├── app.py                  # File utama aplikasi
+├── Procfile                # Konfigurasi untuk deployment
+├── README.md               # Dokumentasi proyek
+├── requirements.txt        # Dependensi Python
+├── run.py                  # Skrip untuk menjalankan aplikasi secara lokal
+└── SECURITY.md             # Kebijakan keamanan
+```
 
 ---
 
-💖 **Why I Built This** 💖
+🚀 **Panduan Memulai Cepat** 🚀
 
-I created this project to provide a simple, accessible, and powerful tool for managing personal finances. It's been a rewarding journey, and I hope it inspires you to take control of your financial future.
-
-Happy tracking! 💸
+1.  **Berbicara dengan Bot**: Buka Telegram dan mulai obrolan dengan bot.
+2.  **Mulai Mengobrol**: Kirim `/start` untuk mendapatkan pesan selamat datang dan melihat perintah yang tersedia.
+3.  **Catat Transaksi**:
+    *   Untuk menambahkan pemasukan: `/masuk 1000000 #gaji Bonus`
+    *   Untuk menambahkan pengeluaran: `/keluar 50000 #makanan Makan siang`
+4.  **Periksa Laporan**:
+    *   Untuk ringkasan bulanan: `/laporan`
+    *   Untuk membandingkan pengeluaran: `/compare`
 
 ---
 
-## 🔒 Security
+🛠️ **Tumpukan Teknologi** 🛠️
 
-This bot is designed with security in mind. For a detailed overview of the security features and best practices, please see the [Security Policy](SECURITY.md).
+*   **Python**: Bahasa inti untuk logika bot.
+*   **`python-telegram-bot`**: Untuk integrasi yang mulus dengan Telegram API.
+*   **`gspread`**: Untuk terhubung ke Google Sheets sebagai penyimpanan data.
+*   **`pandas`**: Untuk analisis data yang kuat dan pembuatan laporan.
+*   **Flask**: Untuk menangani webhook dan menjaga bot tetap berjalan lancar.
+*   **Logging**: Pencatatan kesalahan yang komprehensif untuk pemecahan masalah yang mudah.
+*   **Variabel Lingkungan**: Manajemen konfigurasi yang aman dengan dukungan `.env`.
+
+---
+
+⚙️ **Instruksi Penyiapan** ⚙️
+
+Untuk menyiapkan bot keuangan pribadi Anda sendiri, Anda akan membutuhkan:
+
+1.  **Token Bot Telegram**: Dapatkan dari BotFather di Telegram.
+2.  **Proyek Google Cloud & Akun Layanan**:
+    *   Aktifkan Google Sheets API.
+    *   Buat akun layanan dan unduh kredensial JSON-nya.
+    *   Bagikan Google Sheet Anda dengan alamat email akun layanan.
+3.  **Variabel Lingkungan**: Siapkan ini di lingkungan deployment Anda:
+
+---
+
+🔄 **Mode Pengembangan vs Deployment** 🔄
+
+Bot ini dapat dijalankan dalam dua mode berbeda:
+
+1. **Mode Pengembangan (Polling)**:
+   * Gunakan `python run.py` untuk menjalankan bot secara lokal
+   * Menggunakan metode polling untuk menerima update dari Telegram
+   * Tidak memerlukan WEBHOOK_URL
+   * Ideal untuk pengembangan dan pengujian lokal
+
+2. **Mode Deployment (Webhook)**:
+   * Gunakan `gunicorn app:app` (seperti yang dikonfigurasi dalam Procfile)
+   * Memerlukan WEBHOOK_URL yang valid (misalnya URL Render.com Anda)
+   * Lebih efisien untuk deployment produksi
+   * Dapat di-deploy di platform seperti Render.com
+    *   `TELEGRAM_TOKEN`: Token bot Anda.
+    *   `GSPREAD_CREDENTIALS`: Konten file JSON akun layanan Anda.
+    *   `WEBHOOK_URL`: URL webhook Anda (hanya diperlukan untuk mode deployment).
+    *   `HOST`: Host untuk server web (default: 0.0.0.0).
+    *   `PORT`: Port untuk server web (default: 5000).
+    *   `SPREADSHEET_ID`: ID Google Sheet Anda.
+    *   `ALLOWED_USER_IDS`: ID pengguna Telegram Anda untuk membatasi akses.
+    *   `WEBHOOK_URL`: URL webhook untuk bot Anda.
+
+---
+
+💖 **Mengapa Saya Membangun Ini** 💖
+
+Saya membuat proyek ini untuk menyediakan alat yang sederhana, mudah diakses, dan kuat untuk mengelola keuangan pribadi. Ini adalah perjalanan yang memuaskan, dan saya harap ini menginspirasi Anda untuk mengambil kendali atas masa depan finansial Anda.
+
+Selamat melacak! 💸
+
+---
+
+## 🔒 Keamanan
+
+Bot ini dirancang dengan mempertimbangkan keamanan. Untuk gambaran rinci tentang fitur keamanan dan praktik terbaik, silakan lihat [Kebijakan Keamanan](SECURITY.md).

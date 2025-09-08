@@ -6,64 +6,89 @@ File ini menginisialisasi semua komponen aplikasi dan menjalankan server web.
 """
 
 import logging
-from flask import Flask
 from telegram.ext import ApplicationBuilder
 
+from app import app
 from app.config import (
-    TELEGRAM_TOKEN, PORT, HOST, WEBHOOK_URL, 
-    setup_logging, validate_environment
+    TELEGRAM_TOKEN, PORT, HOST, WEBHOOK_URL,
+    setup_logging, validate_environment,
+    APP_NAME, APP_VERSION  # Import the constants
 )
 from app.database.sheets import initialize_gspread
 from app.bot import setup_bot
-from app.web.routes import init_web, setup_webhook
+from app.web.routes import set_bot, setup_webhook
 
-# Inisialisasi Flask app di level modul untuk diakses oleh WSGI server
-app = Flask(__name__)
 
 def main():
     """Fungsi utama untuk menjalankan aplikasi."""
     # Setup logging
-    setup_logging()
-    
+    try:
+        setup_logging()
+        logging.info(f"✅ Memulai {APP_NAME} v{APP_VERSION}")
+    except Exception as e:
+        print(f"FATAL ERROR: Gagal mengatur logging: {e}")
+        return False
+
     # Validasi variabel lingkungan
-    if not validate_environment():
-        logging.error("❌ Validasi variabel lingkungan gagal. Aplikasi dihentikan.")
-        return
-    
+    try:
+        if not validate_environment():
+            logging.error("❌ Validasi variabel lingkungan gagal. Aplikasi dihentikan.")
+            return False
+        logging.info("✅ Validasi variabel lingkungan berhasil")
+    except Exception as e:
+        logging.error(f"❌ Error tak terduga saat validasi lingkungan: {e}")
+        return False
+
     # Inisialisasi Google Sheets
-    if not initialize_gspread():
-        logging.error("❌ Inisialisasi Google Sheets gagal. Aplikasi dihentikan.")
-        return
-    
+    try:
+        if not initialize_gspread():
+            logging.error("❌ Inisialisasi Google Sheets gagal. Aplikasi dihentikan.")
+            return False
+        logging.info("✅ Koneksi Google Sheets berhasil")
+    except Exception as e:
+        logging.error(f"❌ Error tak terduga saat inisialisasi Google Sheets: {e}")
+        return False
+
     # Inisialisasi bot Telegram
+    bot = None
     try:
         bot = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
         setup_bot(bot)
         logging.info("✅ Bot Telegram berhasil diinisialisasi")
     except Exception as e:
         logging.error(f"❌ Gagal menginisialisasi bot Telegram: {e}")
-        return
-    
+        return False
+
     # Inisialisasi aplikasi Flask
     try:
         # Gunakan app yang sudah diinisialisasi di level modul
-        init_web(app, bot)
+        set_bot(bot)
         logging.info("✅ Aplikasi web berhasil diinisialisasi")
     except Exception as e:
         logging.error(f"❌ Gagal menginisialisasi aplikasi web: {e}")
-        return
+        return False
     
     # Setup webhook
-    if not setup_webhook(bot):
-        logging.error("❌ Setup webhook gagal. Aplikasi dihentikan.")
-        return
+    try:
+        if not setup_webhook(bot):
+            logging.error("❌ Setup webhook gagal. Aplikasi dihentikan.")
+            return False
+        logging.info("✅ Webhook berhasil dikonfigurasi")
+    except Exception as e:
+        logging.error(f"❌ Error tak terduga saat setup webhook: {e}")
+        return False
     
     # Jalankan server
     try:
         logging.info(f"✅ Server berjalan di {HOST}:{PORT}")
         app.run(host=HOST, port=PORT)
+        return True
+    except KeyboardInterrupt:
+        logging.info("⚠️ Aplikasi dihentikan oleh pengguna")
+        return True
     except Exception as e:
         logging.error(f"❌ Gagal menjalankan server: {e}")
+        return False
 
 if __name__ == "__main__":
     main()

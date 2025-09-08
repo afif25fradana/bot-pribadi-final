@@ -2,20 +2,21 @@
 """
 WSGI entry point for the application.
 
-This file exposes the Flask application for WSGI servers like Gunicorn.
+This file is used by Gunicorn to run the application in production.
+It imports the fully initialized app object from app.py.
 """
 
-import sys
-import os
+# Import the app object and get_main function
+from app import app, get_main
 
-# Ensure the current directory is in the Python path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Get the main function and run it to initialize everything
+main = get_main()
+initialization_success = main()
 
-# Import the Flask app from the app package
-from app import app
+# Check if initialization was successful
+if not initialization_success:
+    import sys
+    print("FATAL ERROR: Application failed to initialize properly. Exiting.")
+    sys.exit(1)
 
-# For production deployment, the bot initialization will be handled by the main application
-# This file only needs to expose the Flask app for the WSGI server
-
-# Export the Flask app for WSGI servers
-# No need to initialize as it's already done in app.py
+# The app object is now fully initialized and ready for Gunicorn

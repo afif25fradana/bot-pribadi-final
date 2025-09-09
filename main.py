@@ -52,8 +52,9 @@ def health():
 if __name__ == "__main__":
     try:
         settings.validate_config()
-        logging.info("🚀 Starting Noxara Finance Bot v2.1.0")
-        app.run(host=settings.HOST, port=settings.PORT, debug=settings.DEBUG_MODE)
+        logging.info("🚀 Starting Noxara Finance Bot v2.1.0 in production mode")
+        # Force debug to False for production
+        app.run(host=settings.HOST, port=settings.PORT, debug=False)
     except ValueError as e:
         logging.critical(f"❌ Bot failed to start: {e}")
         exit(1)

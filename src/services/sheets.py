@@ -151,8 +151,7 @@ class GoogleSheetsService:
     def is_connected(self):
         """Check if the service is connected"""
         # For backward compatibility with health_check.py
-        self.connected = self.client is not None and self.spreadsheet is not None and self._connection_active
-        return self.connected
+        return self.client is not None and self.spreadsheet is not None and self._connection_active
     
     def append_row(self, worksheet_name, row_data):
         """Append a row to the specified worksheet with retry logic"""
@@ -205,7 +204,7 @@ class GoogleSheetsService:
 
     def get_worksheet(self, name: str):
         """Get a worksheet by name with rate limit handling."""
-        if not self.connected:
+        if not self._connection_active:
             if not self.connect():
                 return None
                 
@@ -231,9 +230,9 @@ class GoogleSheetsService:
             
     def is_connected(self) -> bool:
         """Check if connected to Google Sheets."""
-        if not self.connected:
+        if not self._connection_active:
             return self.connect()
-        return self.connected
+        return self._connection_active
         
     def append_row(self, worksheet_name: str, row_data: List[Any]) -> bool:
         """Append a row to a worksheet with rate limit handling."""

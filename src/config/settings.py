@@ -18,19 +18,20 @@ GOOGLE_SHEETS_SPREADSHEET_NAME = os.getenv("GOOGLE_SHEETS_SPREADSHEET_NAME") or 
 # Web server settings
 PORT = int(os.getenv("PORT", 8000))
 HOST = os.getenv("HOST", "0.0.0.0")
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+# Default to False for production mode
+DEBUG = False
 
 # Logging settings
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 LOG_DIR = os.getenv("LOG_DIR", "logs")
 
 def setup_logging():
-    """Set up logging configuration."""
+    """Set up logging configuration for production."""
     # Create logs directory if it doesn't exist
     log_dir = Path(LOG_DIR)
     log_dir.mkdir(exist_ok=True)
     
-    # Set up logging
+    # Set up logging - default to INFO for production
     log_level = getattr(logging, LOG_LEVEL.upper(), logging.INFO)
     
     # Configure root logger
@@ -43,12 +44,13 @@ def setup_logging():
         ]
     )
     
-    # Reduce noise from external libraries
+    # Reduce noise from external libraries in production
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("telegram").setLevel(logging.WARNING)
     logging.getLogger("gspread").setLevel(logging.WARNING)
+    logging.getLogger("werkzeug").setLevel(logging.WARNING)  # Reduce Flask logs
     
-    SecureLogger.info("Logging configured successfully")
+    SecureLogger.info("Logging configured successfully for production mode")
 
 def validate_config():
     """Validate required configuration variables."""

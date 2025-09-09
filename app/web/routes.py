@@ -64,7 +64,9 @@ def webhook():
                 logging.error("❌ Gagal mem-parsing update dari Telegram")
                 return 'Invalid update format', 400
                 
-            _bot.process_update(update)
+            # Create a task for the coroutine instead of calling it directly
+            import asyncio
+            asyncio.create_task(_bot.process_update(update))
             logging.debug("✅ Webhook berhasil diproses")
         except ValueError as e:
             logging.error(f"❌ Error format JSON saat memproses webhook: {e}")

@@ -59,3 +59,12 @@ if __name__ == "__main__":
     except ValueError as e:
         logging.critical(f"❌ Bot failed to start: {e}")
         exit(1)
+else:
+    # This section is executed when the file is imported by gunicorn
+    # Make sure we validate config when running in production
+    try:
+        settings.validate_config()
+        logging.info(f"🚀 Starting Noxara Finance Bot v2.1.0 on port {settings.PORT}")
+    except ValueError as e:
+        logging.critical(f"❌ Bot failed to start: {e}")
+        # We can't exit here as it would kill the gunicorn worker

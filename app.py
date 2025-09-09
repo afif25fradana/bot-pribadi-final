@@ -6,6 +6,7 @@ File ini menginisialisasi semua komponen aplikasi dan menjalankan server web.
 """
 
 import logging
+import asyncio
 from telegram.ext import ApplicationBuilder
 
 from app import app
@@ -18,6 +19,13 @@ from app.database.sheets import initialize_gspread
 from app.bot import setup_bot
 from app.web.routes import set_bot, setup_webhook
 
+
+async def initialize_bot():
+    """Initialize the bot application asynchronously"""
+    bot = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+    await bot.initialize()
+    setup_bot(bot)
+    return bot
 
 def main():
     """Fungsi utama untuk menjalankan aplikasi."""
@@ -52,8 +60,8 @@ def main():
     # Inisialisasi bot Telegram
     bot = None
     try:
-        bot = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-        setup_bot(bot)
+        # Use asyncio to run the async initialization function
+        bot = asyncio.run(initialize_bot())
         logging.info("✅ Bot Telegram berhasil diinisialisasi")
     except Exception as e:
         logging.error(f"❌ Gagal menginisialisasi bot Telegram: {e}")

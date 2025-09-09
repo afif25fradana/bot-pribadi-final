@@ -40,8 +40,7 @@ def health():
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    """
-    Endpoint untuk webhook Telegram.
+    """Endpoint untuk webhook Telegram.
     
     Returns:
         str: Respons kosong dengan status 200.
@@ -64,7 +63,7 @@ def webhook():
                 logging.error("❌ Gagal mem-parsing update dari Telegram")
                 return 'Invalid update format', 400
                 
-            # Use asyncio.run instead of create_task
+            # Use asyncio.run to properly handle the coroutine
             import asyncio
             asyncio.run(_bot.process_update(update))
             logging.debug("✅ Webhook berhasil diproses")

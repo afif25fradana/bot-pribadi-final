@@ -39,6 +39,7 @@ def index():
     bot_info = {
         "name": "Noxara Finance Bot",
         "version": "2.1.0",
+        "creator": "@Afif_Fradana",
         "status": "🟢 Running",
         "google_sheets": sheets_status
     }

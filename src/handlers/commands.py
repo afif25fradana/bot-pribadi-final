@@ -1,5 +1,6 @@
 import logging
 import datetime
+from datetime import timezone, timedelta
 import pandas as pd
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup # type: ignore
 from telegram.ext import ContextTypes # type: ignore
@@ -117,11 +118,16 @@ async def catat_transaksi(update: Update, context: ContextTypes.DEFAULT_TYPE, ti
 
 @restricted
 # Add this function to standardize date handling
-def get_standardized_date(date_str=None):
+def get_standardized_date(update=None, context=None, date_str=None):
     """
     Standardizes date handling with proper timezone support.
     If date_str is provided, parses it. Otherwise uses current date.
     Returns a datetime object with Asia/Jakarta timezone.
+    
+    Parameters:
+    update (Update, optional): The update object from Telegram
+    context (ContextTypes.DEFAULT_TYPE, optional): The context object from Telegram
+    date_str (str, optional): Date string to parse
     """
     jakarta_tz = timezone(timedelta(hours=7))  # UTC+7 for Jakarta/Indonesia
     
@@ -130,9 +136,9 @@ def get_standardized_date(date_str=None):
             # Try to parse the date string in various formats
             for fmt in ["%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%d %B %Y"]:
                 try:
-                    parsed_date = datetime.strptime(date_str, fmt)
+                    parsed_date = datetime.datetime.strptime(date_str, fmt)
                     # Set time to beginning of day and apply timezone
-                    return datetime(parsed_date.year, parsed_date.month, parsed_date.day, 
+                    return datetime.datetime(parsed_date.year, parsed_date.month, parsed_date.day, 
                                    tzinfo=jakarta_tz)
                 except ValueError:
                     continue
@@ -141,12 +147,12 @@ def get_standardized_date(date_str=None):
         except Exception as e:
             SecureLogger.error(f"Error parsing date: {e}")
             # Default to current date if parsing fails
-            now = datetime.now(jakarta_tz)
-            return datetime(now.year, now.month, now.day, tzinfo=jakarta_tz)
+            now = datetime.datetime.now(jakarta_tz)
+            return datetime.datetime(now.year, now.month, now.day, tzinfo=jakarta_tz)
     else:
         # Use current date with Jakarta timezone
-        now = datetime.now(jakarta_tz)
-        return datetime(now.year, now.month, now.day, tzinfo=jakarta_tz)
+        now = datetime.datetime.now(jakarta_tz)
+        return datetime.datetime(now.year, now.month, now.day, tzinfo=jakarta_tz)
 
 @restricted
 async def laporan(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -157,22 +163,31 @@ async def laporan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.effective_chat.id
         SecureLogger.info(f"User requested financial report")
         
+        # Check if this is a callback query or direct command
+        is_callback = update.callback_query is not None
+        
         # Send loading message
-        loading_message = await context.bot.send_message(
-            chat_id=chat_id,
-            text="⏳ Sedang menyiapkan laporan keuangan..."
-        )
+        if is_callback:
+            # For callback queries, edit the existing message
+            loading_message = await update.callback_query.edit_message_text(
+                text="⏳ Sedang menyiapkan laporan keuangan..."
+            )
+        else:
+            # For direct commands, send a new message
+            loading_message = await context.bot.send_message(
+                chat_id=chat_id,
+                text="⏳ Sedang menyiapkan laporan keuangan..."
+            )
         
         # Get current date using standardized function
-        current_date = get_standardized_date()
+        current_date = get_standardized_date(update, context)
         current_month = current_date.month
         current_year = current_date.year
         
         # Format month name in Indonesian
         month_name = get_month_name(current_month)
         
-        # Get the Google Sheets service
-        sheets_service = GoogleSheetsService()
+        # Use the imported sheets_service
         if not sheets_service.is_connected():
             await context.bot.edit_message_text(
                 chat_id=chat_id,
@@ -274,14 +289,24 @@ async def compare_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.effective_chat.id
         SecureLogger.info(f"User requested comparison report")
         
+        # Check if this is a callback query or direct command
+        is_callback = update.callback_query is not None
+        
         # Send loading message
-        loading_message = await context.bot.send_message(
-            chat_id=chat_id,
-            text="⏳ Sedang menyiapkan laporan perbandingan..."
-        )
+        if is_callback:
+            # For callback queries, edit the existing message
+            loading_message = await update.callback_query.edit_message_text(
+                text="⏳ Sedang menyiapkan laporan perbandingan..."
+            )
+        else:
+            # For direct commands, send a new message
+            loading_message = await context.bot.send_message(
+                chat_id=chat_id,
+                text="⏳ Sedang menyiapkan laporan perbandingan..."
+            )
         
         # Get current date using standardized function
-        current_date = get_standardized_date()
+        current_date = get_standardized_date(update, context)
         current_month = current_date.month
         current_year = current_date.year
         

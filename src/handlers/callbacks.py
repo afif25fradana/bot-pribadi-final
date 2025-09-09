@@ -16,6 +16,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     callback_data = query.data
     
     try:
+        # Log the callback data for debugging
+        SecureLogger.info(f"Received callback with data: {callback_data}")
+        
         if callback_data == "laporan":
             # Call the laporan function
             await commands.laporan(update, context)

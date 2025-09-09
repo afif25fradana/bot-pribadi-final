@@ -1,9 +1,13 @@
 import asyncio
 import logging
+import tracemalloc
 from flask import Flask, request, jsonify # type: ignore
 from telegram import Update # type: ignore
 from src.config import settings
 from src.bot.application import create_application
+
+# Enable tracemalloc for detailed object allocation traceback
+tracemalloc.start()
 
 # Initialize Flask app
 app = Flask(__name__)

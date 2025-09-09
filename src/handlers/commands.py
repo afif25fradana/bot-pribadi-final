@@ -118,7 +118,7 @@ async def catat_transaksi(update: Update, context: ContextTypes.DEFAULT_TYPE, ti
 
 @restricted
 # Add this function to standardize date handling
-def get_standardized_date(update=None, context=None, date_str=None):
+async def get_standardized_date(update=None, context=None, date_str=None):
     """
     Standardizes date handling with proper timezone support.
     If date_str is provided, parses it. Otherwise uses current date.
@@ -180,7 +180,7 @@ async def laporan(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         
         # Get current date using standardized function
-        current_date = get_standardized_date(update, context)
+        current_date = await get_standardized_date(update, context)
         current_month = current_date.month
         current_year = current_date.year
         
@@ -306,7 +306,7 @@ async def compare_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         
         # Get current date using standardized function
-        current_date = get_standardized_date(update, context)
+        current_date = await get_standardized_date(update, context)
         current_month = current_date.month
         current_year = current_date.year
         

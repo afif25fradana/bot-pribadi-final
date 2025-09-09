@@ -75,7 +75,7 @@ async def catat_transaksi(update: Update, context: ContextTypes.DEFAULT_TYPE, ti
             return
             
         # Append the transaction
-        row = [tanggal, jumlah, kategori, deskripsi, tipe]
+        row = [tanggal, tipe, jumlah, kategori, deskripsi]
         success = sheets_service.append_row("Transaksi", row)
         
         if not success:

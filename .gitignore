@@ -100,9 +100,8 @@ celerybeat.pid
 env/
 venv/
 ENV/
-env.bak/
-venv.bak/
-my_env/
+env.bak
+venv.bak
 
 # Spyder project settings
 .spyderproject
@@ -122,18 +121,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# VSCode settings
-.vscode/
+# pytype static analyzer
+.pytype/
 
-# PyCharm settings
-.idea/
-
-# Logs
-logs/*
-!logs/.gitkeep
-
-# Credentials
-credentials.json
-
-# Local configuration
-config.local.py
+# Cython debug symbols
+cython_debug/

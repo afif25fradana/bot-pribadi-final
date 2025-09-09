@@ -6,13 +6,15 @@ Think of this bot as my personal financial assistant, always ready to help me st
 
 ---
 
-✨ **What's New in v2.0.0?** ✨
+✨ **What's New in v2.1.0?** ✨
 
 *   **🚀 Enhanced User Interface**: A completely redesigned, visually appealing interface with interactive buttons for a seamless user experience.
 *   **📊 Advanced Reporting**: More detailed and insightful reports, including category breakdowns, financial health status, and performance comparisons.
 *   **⚡ Improved Performance**: Optimized code for faster response times and more efficient data processing.
 *   **🛡️ Robust Error Handling**: Better error handling and auto-reconnection to ensure the bot is always available when you need it.
-*   **⚙️ Comprehensive Health Checks**: A new health check script to easily diagnose and troubleshoot any issues.
+*   **⚙️ Comprehensive Health Checks**: An enhanced health check system that verifies environment variables, Google Sheets connection, and Telegram bot functionality.
+*   **🔄 Flexible Configuration**: Support for multiple environment variable formats for Google Sheets credentials and spreadsheet identification.
+*   **🏗️ Modular Code Structure**: Refactored codebase with improved organization into logical modules.
 
 ---
 
@@ -66,8 +68,8 @@ To set up your own personal finance bot, you'll need:
     *   Share your Google Sheet with the service account's email address.
 3.  **Environment Variables**: Set these up in your deployment environment:
     *   `TELEGRAM_TOKEN`: Your bot's token.
-    *   `GSPREAD_CREDENTIALS`: The content of your service account JSON file.
-    *   `SPREADSHEET_NAME`: The name of your Google Sheet.
+    *   `GSPREAD_CREDENTIALS` or `GOOGLE_SHEETS_CREDENTIALS`: The content of your service account JSON file.
+    *   `SPREADSHEET_NAME` or `SPREADSHEET_ID` or `GOOGLE_SHEETS_SPREADSHEET_NAME`: The name or ID of your Google Sheet.
     *   `ALLOWED_USER_ID`: Your Telegram user ID to restrict access.
 
 ---

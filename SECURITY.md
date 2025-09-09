@@ -10,6 +10,7 @@ As the sole developer and maintainer of this hobby project, I've put a lot of th
 
 2.  **Secure Credential Management**:
     *   All sensitive information, including the Telegram bot token, Google Sheets credentials, and your user ID, is managed through environment variables. This is a crucial practice to prevent hardcoding sensitive data directly into the source code, which is a major security risk.
+    *   The bot now supports multiple environment variable formats for Google Sheets credentials (`GSPREAD_CREDENTIALS` or `GOOGLE_SHEETS_CREDENTIALS`) and spreadsheet identification (`SPREADSHEET_NAME`, `SPREADSHEET_ID`, or `GOOGLE_SHEETS_SPREADSHEET_NAME`), providing flexibility while maintaining security.
     *   The `.gitignore` file is carefully configured to prevent the `.env` file (where these variables are typically stored locally) from ever being accidentally committed to a public repository.
 
 3.  **No Data Storage on the Server**:
@@ -37,6 +38,7 @@ To ensure the security of your bot, please follow these best practices:
 
 4.  **Monitor Bot Activity**:
     *   I've included logging to help you monitor the bot's activity. Regularly check the logs for any suspicious behavior or unauthorized access attempts.
+    *   The enhanced health check system (`health_check.py`) now provides comprehensive verification of environment variables, Google Sheets connection, and Telegram bot functionality, making it easier to identify and troubleshoot security-related configuration issues.
 
 ## 🚨 Reporting a Vulnerability
 
